@@ -3,6 +3,7 @@
 
 #include <QWidget>
 #include <QTcpSocket>
+#include <QSqlDatabase>
 
 
 struct PropSensor
@@ -33,11 +34,10 @@ public:
 private:
     Ui::SmartHomeDisplay *ui;
 
+    QSqlDatabase* dbase;
     QTcpSocket* socket;
     QByteArray data;
     quint16 nextBlockSize;
-
-    bool isRequestSend;
 
 private:
     void messageOfUnconectedToServer();

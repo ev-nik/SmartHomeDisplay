@@ -4,6 +4,7 @@
 
 #include <QMessageBox>
 #include <QApplication>
+#include <QtSql>
 //------------------------------------------------------------------------------------
 
 SmartHomeDisplay::SmartHomeDisplay(QWidget *parent)
@@ -14,7 +15,6 @@ SmartHomeDisplay::SmartHomeDisplay(QWidget *parent)
 
     ui->setupUi(this);
 
-    isRequestSend = false;
     nextBlockSize = 0;
 
     socket = new QTcpSocket(this);
@@ -31,30 +31,18 @@ SmartHomeDisplay::~SmartHomeDisplay()
 }
 //------------------------------------------------------------------------------------
 
-
-void SmartHomeDisplay::connectToServer()
-{
-    socket->connectToHost("127.0.0.1", 3333);
-}
-//------------------------------------------------------------------------------------
-
-
-
 void SmartHomeDisplay::stateChangeSocket(QAbstractSocket::SocketState socketState)
 {
     switch(socketState)
     {
         case QTcpSocket::ConnectedState:
         {
-            qDebug() << "Connect to SERVER";
+            readyRead();
             break;
         }
         case QTcpSocket::UnconnectedState:
         {
-            if(isRequestSend)
-            {
-                messageOfUnconectedToServer();
-            }
+            messageOfUnconectedToServer();
             break;
         }
         default:
@@ -65,7 +53,6 @@ void SmartHomeDisplay::stateChangeSocket(QAbstractSocket::SocketState socketStat
 }
 //------------------------------------------------------------------------------------
 
-
 void SmartHomeDisplay::messageOfUnconectedToServer()
 {
     QMessageBox::warning(this,
@@ -75,9 +62,20 @@ void SmartHomeDisplay::messageOfUnconectedToServer()
 }
 //------------------------------------------------------------------------------------
 
+void SmartHomeDisplay::connectToServer()
+{
+    socket->connectToHost("127.0.0.1", 3333);
+}
+//------------------------------------------------------------------------------------
 
 void SmartHomeDisplay::readyRead()
 {
+    if(socket->state() != QTcpSocket::ConnectedState)
+    {
+        connectToServer();
+        return;
+    }
+
     QDataStream in(socket);
     in.setVersion(QDataStream::Qt_5_15);
 
@@ -99,17 +97,21 @@ void SmartHomeDisplay::readyRead()
                     break;
                 }
 
-                QString name;
+                QString nameSensor;
                 QString dateTime;
-                QString val;
-                in >> name >> dateTime >> val;
+                QString valSensor;
+                in >> nameSensor >> dateTime >> valSensor;
 
-                qDebug() << name << " " << dateTime << " " << val;
+                qDebug() << nameSensor << " " << dateTime << " " << valSensor;
                 nextBlockSize = 0;
-                break;
             }
         }
     }
 }
 //------------------------------------------------------------------------------------
 
+void SmartHomeDisplay::init(QSqlDatabase* dbase)
+{
+    this->dbase = dbase;
+}
+//------------------------------------------------------------------------------------
