@@ -15,6 +15,7 @@ int main(int argc, char *argv[])
 
     SmartHomeDisplay w;
     w.show();
+
     return a.exec();
 }
 //----------------------------------------------------------------------

@@ -5,6 +5,8 @@
 #include <QMessageBox>
 #include <QApplication>
 #include <QtSql>
+#include <QHeaderView>
+#include <QHBoxLayout>
 //------------------------------------------------------------------------------------
 
 SmartHomeDisplay::SmartHomeDisplay(QWidget *parent)
@@ -14,6 +16,18 @@ SmartHomeDisplay::SmartHomeDisplay(QWidget *parent)
     qApp->installEventFilter(this);
 
     ui->setupUi(this);
+
+    tWidget = new QTableWidget(this);
+    tWidget->setColumnCount(3);
+    tWidget->setHorizontalHeaderLabels({"Дата и время", "Наименование датчика", "Значение"});
+    tWidget->setRowCount(0);
+
+    QHeaderView* headerView = tWidget->horizontalHeader();
+    headerView->setSectionResizeMode(QHeaderView::Stretch);
+
+
+    QHBoxLayout* hLayout = new QHBoxLayout(this);
+    hLayout->addWidget(tWidget);
 
     nextBlockSize = 0;
 
@@ -98,20 +112,36 @@ void SmartHomeDisplay::readyRead()
                 }
 
                 QString nameSensor;
-                QString dateTime;
-                QString valSensor;
+                int dateTime;
+                int valSensor;
+
                 in >> nameSensor >> dateTime >> valSensor;
 
-                qDebug() << nameSensor << " " << dateTime << " " << valSensor;
                 nextBlockSize = 0;
+
+                insertValue(nameSensor, dateTime, valSensor);
             }
         }
     }
 }
 //------------------------------------------------------------------------------------
 
-void SmartHomeDisplay::init(QSqlDatabase* dbase)
+void SmartHomeDisplay::insertValue(QString& nameSensor, int& dateTime, int& valueSensor)
 {
-    this->dbase = dbase;
+    QTableWidgetItem* nameSensorItem  = new QTableWidgetItem();
+    QTableWidgetItem* dateTimeItem    = new QTableWidgetItem();
+    QTableWidgetItem* valueSensorItem = new QTableWidgetItem();
+
+    QDateTime dateTimeTable = QDateTime::fromSecsSinceEpoch(dateTime);
+
+    nameSensorItem ->setData(Qt::DisplayRole, nameSensor);
+    dateTimeItem   ->setData(Qt::DisplayRole, dateTimeTable);
+    valueSensorItem->setData(Qt::DisplayRole, valueSensor);
+
+    int row = tWidget->rowCount();
+    tWidget->insertRow(row);
+
+    tWidget->setItem(row, 0, nameSensorItem);
+    tWidget->setItem(row, 1, dateTimeItem);
+    tWidget->setItem(row, 2, valueSensorItem);
 }
-//------------------------------------------------------------------------------------

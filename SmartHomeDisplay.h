@@ -4,6 +4,7 @@
 #include <QWidget>
 #include <QTcpSocket>
 #include <QSqlDatabase>
+#include <QTableWidget>
 
 
 struct PropSensor
@@ -37,10 +38,13 @@ private:
     QSqlDatabase* dbase;
     QTcpSocket* socket;
     QByteArray data;
-    quint16 nextBlockSize;
+    quint64 nextBlockSize;
+
+    QTableWidget* tWidget;
 
 private:
     void messageOfUnconectedToServer();
+    void insertValue(QString& nameSensor, int& dateTime,  int& valueSensor);
 
 private slots:
     void connectToServer();
